@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Firebase app</title>
+</head>
+<body>
+
+<div id="app" style="display: none">
+    <h2>Scores</h2>
+    <ul>
+        <li><strong>Instinct: </strong> <span id="instinct">...loading...</span>  </li>
+        <li><strong>Mystic: </strong> <span id="mystic">...loading...</span></li>
+        <li><strong>Valor: </strong> <span id="valor">...loading...</span>  </li>
+    </ul>
+    <button id="voteForInstinct">Vote Instinct</button>
+    <button id="voteForMystic">Vote Mystic</button>
+    <button id="voteForValor">Vote Valor</button>
+
+    <br>
+    <button id="logoutBtn">Log out</button>
+</div>
+
+<div id="outside">
+    <h4>Hello Anonymous!</h4>
+    <button id="loginBtn">Log In</button>
+</div>
+
+
+
+<script src="https://www.gstatic.com/firebasejs/4.9.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/4.9.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/4.9.1/firebase-database.js"></script>
+
+<script>
+    let config = {
+        apiKey: "AIzaSyABh8jF-_hLYv17K597GrPpf-hl4Azedxo",
+        authDomain: "pokemonteamvote.firebaseapp.com",
+        databaseURL: "https://pokemonteamvote.firebaseio.com",
+    };
+
+    firebase.initializeApp(config);
+
+    let userID;
+
+    let auth = firebase.auth();
+    auth.onAuthStateChanged(function (authData) {
+
+        if(authData){
+            document.getElementById("app").style.display="block";
+            document.getElementById("outside").style.display="none";
+
+            userID = authData.uid;
+            db.ref('/votes').on('value', function(snapshot){
+                let votes = snapshot.val();
+
+                let scores = {
+                    instinct: 0,
+                    mystic: 0,
+                    valor: 0
+                };
+                for (let uid in votes){
+                    scores[votes[uid]] += 1;
+                }
+                ui.instinct.innerText = scores.instinct;
+                ui.mystic.innerText = scores.mystic;
+                ui.valor.innerText = scores.valor;
+            });
+
+        }
+        else {
+            document.getElementById("app").style.display="none";
+            document.getElementById("outside").style.display="block";
+        }
+
+        console.log("Authdata", authData);
+    });
+
+    let db = firebase.database();
+
+
+    let provider = new firebase.auth.GithubAuthProvider();
+    document.getElementById("loginBtn").addEventListener("click", function () {
+        auth.signInWithPopup(provider);
+    });
+
+
+    document.getElementById("logoutBtn").addEventListener("click", function () {
+        auth.signOut();
+    });
+
+
+
+    let ui = {
+        instinct: document.getElementById("instinct"),
+        mystic: document.getElementById("mystic"),
+        valor: document.getElementById("valor"),
+    };
+
+
+
+    document.getElementById("voteForInstinct").addEventListener("click", function () {
+        db.ref('/votes/' + userID).set('instinct');
+        /*db.ref('/instinct').transaction(function (current) { //.transaction(current => current+1) ?
+            return current +1;
+        })*/
+    });
+
+    document.getElementById("voteForMystic").addEventListener("click", function () {
+        db.ref('/votes/' + userID).set('mystic');
+    });
+
+    document.getElementById("voteForValor").addEventListener("click", function () {
+        db.ref('/votes/' + userID).set('valor');
+    })
+
+</script>
+
+</body>
+</html>
